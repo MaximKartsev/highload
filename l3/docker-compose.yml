@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  javaapp:
+    image: openjdk:8u212-jdk-alpine
+    env_file:
+      - javaapp-variables.env
+    volumes:
+      - ./:/usr/src/testapp/
+    working_dir: /usr/src/testapp
+    expose:
+      - 8080
+    command: sh -c "apk add maven && mvn clean package && java -jar target/l3-0.0.1-SNAPSHOT.jar"
