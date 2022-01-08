@@ -1,0 +1,75 @@
+version: '3'
+services:
+
+  mongodb:
+    image: mongo:4.4.12-rc0-focal
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=EmployeeDB
+    ports:
+      - 27017:27017
+    volumes:
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./data/mongo:/data/db
+      
+  influxdb:
+    image: influxdb:2.0.7
+    volumes:
+      - ./data/influxdbv2:/var/lib/influxdb2:rw
+    environment:
+    - DOCKER_INFLUXDB_INIT_MODE=setup
+    - DOCKER_INFLUXDB_INIT_USERNAME=admin
+    - DOCKER_INFLUXDB_INIT_PASSWORD=passwordpassword
+    - DOCKER_INFLUXDB_INIT_ORG=myorg
+    - DOCKER_INFLUXDB_INIT_BUCKET=mybucket
+    - DOCKER_INFLUXDB_INIT_RETENTION=1w
+    - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=superSecretTockenValue
+    ports:
+      - "8086:8086"
+      
+  telegraf:
+    image: telegraf:1.21.2-alpine
+    links:
+      - influxdb
+    volumes:
+      - ./telegraf.conf:/etc/telegraf/telegraf.conf
+    environment: 
+      - DOCKER_INFLUXDB_INIT_ORG=myorg
+      - DOCKER_INFLUXDB_INIT_BUCKET=mybucket
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=superSecretTockenValue
+    depends_on:
+      - influxdb
+      
+  grafana:
+    image: grafana/grafana-oss:8.3.3
+    links:
+      - influxdb
+    volumes:
+      - ./init/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./data/grafana/data:/var/lib/grafana
+      - ./data/grafana/logs:/var/log/grafana
+      - ./data/grafana/plugins:/var/lib/grafana/plugins
+    environment: 
+      - GF_LOG_MODE=console file
+      #- GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+    depends_on:
+      - influxdb
+      - mongodb
+    ports:
+      - "3000:3000"
+    user: '0'
+
+  app:
+    image: openjdk:8u212-jdk-alpine
+    volumes:
+      - ./app/:/usr/src/testapp/
+    working_dir: /usr/src/testapp
+    ports:
+      - "8080:8080"
+    expose:
+      - 8080
+    command: sh -c "apk add maven && mvn clean package && java -jar target/homework2-0.0.1-SNAPSHOT.jar"
+    
+    
