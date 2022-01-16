@@ -46,13 +46,13 @@ curl -G http://localhost:8086/query?pretty=true --data-urlencode "db=glances" --
 ## Grafana notes
 Datasource export:
 1. Create datasource in Grafana
-2. Download it by executing of the http://localhost:3000/api/datasources request
-3. Remove id, uid fields, set "null" value to the target->datasource objects
+2. Download it by executing of the `http://localhost:3000/api/datasources` request
+3. Remove id, uid fields, set "isDefault": true
 
 Dashboard export:
 1. Create dashboard in Grafana
-2. Download it by executing of the http://localhost:3000/api/dashboards/uid/<uid> request
-3. Remove id, uid fields, set "isDefault": true
+2. Download it by executing of the `http://localhost:3000/api/dashboards/uid/<uid>` request
+3. Remove id, uid fields, set "null" value to the target->datasource objects
 
 ## Useful links
 
